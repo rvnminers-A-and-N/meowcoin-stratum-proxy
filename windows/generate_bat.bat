@@ -1,8 +1,8 @@
 @echo off
 
 set "CURRENT_DIRECTORY=%~dp0"
-if NOT "%CURRENT_DIRECTORY:~-31%" == "\evrmore-stratum-proxy\windows\" (
-    if NOT "%CURRENT_DIRECTORY:~-38%" == "\evrmore-stratum-proxy-master\windows\" (
+if NOT "%CURRENT_DIRECTORY:~-32%" == "\meowcoin-stratum-proxy\windows\" (
+    if NOT "%CURRENT_DIRECTORY:~-39%" == "\meowcoin-stratum-proxy-master\windows\" (
         echo Error: Please run this batch file as-is from its original location in the ravencoin-stratum-proxy folder
 	pause
         exit /B
@@ -88,13 +88,13 @@ if "%IS_MAINNET_INPUT%" == "" (
 
 if "%IS_MAINNET_INPUT%" == "mainnet" (
     set "IS_MAINNET=y"
-    set "DEFAULT_PORT=8819"
+    set "DEFAULT_PORT=9766"
     goto POST_CHECK_MAINNET
 )
 
 if "%IS_MAINNET_INPUT%" == "testnet" (
     set "IS_MAINNET="
-    set "DEFAULT_PORT=18819"
+    set "DEFAULT_PORT=19766"
     goto POST_CHECK_MAINNET
 )
 

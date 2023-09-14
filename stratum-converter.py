@@ -17,7 +17,7 @@ from datetime import datetime
 
 
 #KAWPOW_EPOCH_LENGTH = 7500
-KAWPOW_EPOCH_LENGTH = 12000
+MEOWPOW_EPOCH_LENGTH = 15000
 hashratedict = {}
 
 def var_int(i: int) -> bytes:
@@ -163,7 +163,7 @@ class StratumSession(RPCSession):
     async def handle_authorize(self, username: str, password: str):
         # The first address that connects is the one that is used
         address = username.split('.')[0]
-        if base58.b58decode_check(address)[0] != (111 if self._testnet else 33):
+        if base58.b58decode_check(address)[0] != (111 if self._testnet else 0):
             raise RPCError(20, f'Invalid address {address}')
         if not self._state.address:
             self._state.address = address
@@ -356,13 +356,13 @@ async def stateUpdater(state: TemplateState, old_states, drop_after, node_url: s
                     if state.height == - 1 or height_int > state.height:
                         if not state.seedHash:
                             seed_hash = bytes(32)
-                            for _ in range(height_int//KAWPOW_EPOCH_LENGTH):
+                            for _ in range(height_int//MEOWPOW_EPOCH_LENGTH):
                                 k = sha3.keccak_256()
                                 k.update(seed_hash)
                                 seed_hash = k.digest()
                             print(f'Initialized seedhash to {seed_hash.hex()}')
                             state.seedHash = seed_hash
-                        elif state.height % KAWPOW_EPOCH_LENGTH == 0:
+                        elif state.height % MEOWPOW_EPOCH_LENGTH == 0:
                             # Hashing is expensive, so want use the old val
                             k = sha3.keccak_256()
                             k.update(state.seedHash)
@@ -373,10 +373,10 @@ async def stateUpdater(state: TemplateState, old_states, drop_after, node_url: s
                         # Maybe a chain reorg?
                         
                         # If the difference between heights is greater than how far we are into the epoch
-                        if state.height % KAWPOW_EPOCH_LENGTH - (state.height - height_int) < 0:
+                        if state.height % MEOWPOW_EPOCH_LENGTH - (state.height - height_int) < 0:
                             # We must go back an epoch; recalc
                             seed_hash = bytes(32)
-                            for _ in range(height_int//KAWPOW_EPOCH_LENGTH):
+                            for _ in range(height_int//MEOWPOW_EPOCH_LENGTH):
                                 k = sha3.keccak_256()
                                 k.update(seed_hash)
                                 seed_hash = k.digest()
@@ -408,7 +408,7 @@ async def stateUpdater(state: TemplateState, old_states, drop_after, node_url: s
                     coinbase_script = op_push(len(bip34_height)) + bip34_height + b'\0' + op_push(len(arbitrary_data)) + arbitrary_data
                     coinbase_txin = bytes(32) + b'\xff'*4 + var_int(len(coinbase_script)) + coinbase_script + b'\xff'*4
                     vout_to_miner = b'\x76\xa9\x14' + base58.b58decode_check(state.address)[1:] + b'\x88\xac'
-                    vout_to_devfund = b'\xa9\x14' + base58.b58decode_check("eHNUGzw8ZG9PGC8gKtnneyMaQXQTtAUm98")[1:] + b'\x87'
+                    vout_to_devfund = b'\xa9\x14' + base58.b58decode_check("MPyNGZSSZ4rbjkVJRLn3v64pMcktpEYJnU")[1:] + b'\x87'
 
                     # Concerning the default_witness_commitment:
                     # https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki#commitment-structure
@@ -423,16 +423,16 @@ async def stateUpdater(state: TemplateState, old_states, drop_after, node_url: s
                                     b'\x00\x01' + \
                                     b'\x01' + coinbase_txin + \
                                     b'\x03' + \
-                                        int(coinbase_sats_int*0.9).to_bytes(8, 'little') + op_push(len(vout_to_miner)) + vout_to_miner + \
-                                        int(coinbase_sats_int*0.1).to_bytes(8, 'little') + op_push(len(vout_to_devfund)) + vout_to_devfund + \
+                                        int(coinbase_sats_int*0.6).to_bytes(8, 'little') + op_push(len(vout_to_miner)) + vout_to_miner + \
+                                        int(coinbase_sats_int*0.4).to_bytes(8, 'little') + op_push(len(vout_to_devfund)) + vout_to_devfund + \
                                         bytes(8) + op_push(len(witness_vout)) + witness_vout + \
                                     b'\x01\x20' + bytes(32) + bytes(4))
 
                     coinbase_no_wit = int(1).to_bytes(4, 'little') + \
                                         b'\x01' + coinbase_txin + \
                                         b'\x03' + \
-                                            int(coinbase_sats_int*0.9).to_bytes(8, 'little') + op_push(len(vout_to_miner)) + vout_to_miner + \
-                                            int(coinbase_sats_int*0.1).to_bytes(8, 'little') + op_push(len(vout_to_devfund)) + vout_to_devfund + \
+                                            int(coinbase_sats_int*0.6).to_bytes(8, 'little') + op_push(len(vout_to_miner)) + vout_to_miner + \
+                                            int(coinbase_sats_int*0.4).to_bytes(8, 'little') + op_push(len(vout_to_devfund)) + vout_to_devfund + \
                                             bytes(8) + op_push(len(witness_vout)) + witness_vout + \
                                         bytes(4)
                     state.coinbase_txid = dsha256(coinbase_no_wit)
